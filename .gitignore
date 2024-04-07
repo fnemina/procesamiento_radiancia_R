@@ -1,3 +1,6 @@
+# Ignoro el DS_store
+.DS_Store
+
 # History files
 .Rhistory
 .Rapp.history
