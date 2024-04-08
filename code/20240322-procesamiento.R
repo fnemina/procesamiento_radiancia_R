@@ -24,6 +24,8 @@ library(reshape)
 # Radiancia corregida
 data_pco <- read.csv("../data/007-20240320-LABCETT/medicion_1/L1B_pco/007-20240320-LABCETT-pco.csv", header = TRUE)
 
+data_sp <- read.csv("../data/SP_redondo_20240108.csv")
+
 ################################################################################
 # Funciones previas
 ################################################################################
@@ -54,7 +56,7 @@ radiancia_rel <- function(id, data, kind="tg"){
   sd_kind <- aggregate(x= df_kind$value, by = list(df_kind$wavelength), FUN = sd)
   wavelength <- mean_kind$Group.1
   # Calculo la media reflectancia
-  rel <-sd_kind/ mean_kind
+  rel <- sd_kind/ mean_kind
   rel$wavelength <- wavelength
   return(rel)
 }
@@ -73,7 +75,7 @@ reflectance_mean <- function(id, data){
   # Calculo la media del blanco
   mean_tg <- aggregate(x= df_tg$value, by = list(df_tg$wavelength), FUN = mean)
   # Calculo la media reflectancia
-  ref <- mean_tg/mean_sp
+  ref <- data_sp$X0*mean_tg/mean_sp
   ref$wavelength <- wavelength
   return(ref)
 }
@@ -94,7 +96,7 @@ reflectance_rel <- function(id, data){
   std_sp <- aggregate(x= df_sp$value, by = list(df_sp$wavelength), FUN = sd)
   wavelength <- mean_sp$Group.1
   std_tg <- aggregate(x= df_tg$value, by = list(df_tg$wavelength),FUN = sd)
-  ref <- mean_tg/mean_sp
+  ref <- data_sp$X0*mean_tg/mean_sp
   rel <- sqrt((std_tg/mean_tg)**2+(std_sp/mean_sp)**2)/sqrt(10)
   rel$wavelength <- wavelength
   rel$x <- 100*rel$x
@@ -102,7 +104,7 @@ reflectance_rel <- function(id, data){
 }
 
 ################################################################################
-# Graficos radiancia
+# Graficos radiancia - arena
 ################################################################################
 # Obtengo las radiancias promedio
 arena0 <-radiancia_mean(0, data_pco, kind="tg")
@@ -133,7 +135,7 @@ ggplot(data=arena_rad_rel) + geom_line(aes(x=wavelength, y=x,color=superficie))+
   labs(x = "λ [nm]", y = "ΔL/L [%]" ) + ggtitle("Errror relativo radiancia")
 
 ################################################################################
-# Graficos reflectancia
+# Graficos reflectancia - arena
 ################################################################################
 # Obtengo las reflectancias promedio
 arena0 <-reflectance_mean(0, data_pco)
@@ -162,3 +164,4 @@ arena_ref_rel <- rbind(arena0, arena18, arena28)
 
 ggplot(data=arena_ref_rel) + geom_line(aes(x=wavelength, y=x,color=superficie))+
   labs(x = "λ [nm]", y = "Δρ/ρ [%]") + ggtitle("Errror relativo reflectancia")
+
