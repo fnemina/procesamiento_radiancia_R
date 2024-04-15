@@ -27,6 +27,35 @@ data_pco <- read.csv("../data/007-20240320-LABCETT/medicion_1/L1B_pco/007-202403
 data_sp <- read.csv("../data/SP_redondo_20240108.csv")
 
 ################################################################################
+# Inspección de los datos
+################################################################################
+# Recorto solo un grupo de mediciones para el espectralon
+sp <- paste("",0,"sp", sep=".")
+df_sp <-  melt(select(data_pco,contains(c("wavelength",sp))), id="wavelength")
+ggplot(data=df_sp) + geom_line(aes(x=wavelength, y=value,color=variable))+
+  labs(x = "λ [nm]", y = "L [[W/m²/nm/sr]]" ) + ggtitle("Radiancia")
+
+
+# Recorto solo un grupo de mediciones para el blanco
+tg <- paste("",0,"tg", sep=".")
+df_tg <-  melt(select(data_pco,contains(c("wavelength",tg))), id="wavelength")
+ggplot(data=df_tg) + geom_line(aes(x=wavelength, y=value,color=variable))+
+  labs(x = "λ [nm]", y = "L [[W/m²/nm/sr]]" ) + ggtitle("Radiancia")
+
+# Calculo el promedio para cada uno
+mean_sp <- aggregate(x= df_sp$value, by = list(df_sp$wavelength), FUN = mean)
+mean_tg <- aggregate(x= df_tg$value, by = list(df_tg$wavelength), FUN = mean)
+ggplot() + geom_line(data=mean_sp, aes(x=Group.1, y=x), color="Red")+
+  geom_line(data=mean_tg, aes(x=Group.1, y=x), color="Blue")+
+  labs(x = "λ [nm]", y = "L [[W/m²/nm/sr]]" ) + ggtitle("Radiancia")
+
+# Calculo el cociente
+mean_ref <- mean_tg/mean_sp
+mean_ref$Group.1 <- mean_tg$Group.1
+ggplot() + geom_line(data=mean_ref, aes(x=Group.1, y=x), color="Red")+
+  labs(x = "λ [nm]", y = "ρ" ) + ggtitle("Reflectancia")
+
+################################################################################
 # Funciones previas
 ################################################################################
 # funcion radiancia
@@ -103,6 +132,7 @@ reflectance_rel <- function(id, data){
   return(rel)
 }
 
+
 ################################################################################
 # Graficos radiancia - arena
 ################################################################################
@@ -165,3 +195,17 @@ arena_ref_rel <- rbind(arena0, arena18, arena28)
 ggplot(data=arena_ref_rel) + geom_line(aes(x=wavelength, y=x,color=superficie))+
   labs(x = "λ [nm]", y = "Δρ/ρ [%]") + ggtitle("Errror relativo reflectancia")
 
+
+spec <- reflectance_mean(21, data_pco)
+spec$superficie <-"n"
+ggplot(data=spec) + geom_line(aes(x=wavelength, y=x,color=superficie))+
+  labs(x = "λ [nm]", y = "ρ") + ggtitle("Reflectancia promedio")
+
+################################################################################
+# Actividades
+# 1. Repita el proceso para el embase vacio y las distintas muestras de agua
+# 2. Repita el proceso para las distintas muestras de vegetación con distinto
+#    porcentaje de cobertura
+# 3. Repita el proceso para comparar distintas muestras de vegetación para 
+#    distintas especie
+################################################################################
